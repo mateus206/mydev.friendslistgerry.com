@@ -1,21 +1,58 @@
 <?php
-require_once '../../app/utils/Utils.php';
+require __DIR__ . '/../../../vendor/autoload.php';
 
-// 1. Configuração 1
+require_once __DIR__ . "/../../app/utils/Utils.php";
+require_once __DIR__ . "/../../app/controllers/AuthController.php";
+
+use Firebase\JWT\JWT;   
+use Firebase\JWT\key;
+// 1. Configuração
+
 header("Content-Type: application/json; charset=UTF-8");
 
-// 2. Template de resposta
-$dataResponse= [
-    'success' => true,
-    'message' => 'Operação realizada com sucesso',
-    'data' => []
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$uri = str_replace("/api", "", $uri);
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+// 2. Rotas
+
+if (($uri === "/" || $uri === "/index") && $method === "GET") {
+
+    $dataResponse = [
+        "success" => false,
+        "message" => "id e nome são obrigatórios"
+    ];
+
+    Utils::jsonResponse($dataResponse, 200);
+    exit;
+
+} elseif ($uri === "/create" && $method === "POST") {
+
+    (new AuthController())->loginApi();
+    exit;
+}
+
+// 3. Rota não encontrada
+
+$dataResponse = [
+    "success" => false,
+    "message" => "Rota nao encontrada",
+    "data" => []
 ];
 
-//jsonResponse
+Utils::jsonResponse($dataResponse, 404);
+
+// 4. Template de resposta
+
+/*
+$dataResponse = [
+    "success" => true,
+    "message" => "Operação realizada com sucesso",
+    "data" => []
+];
+
 Utils::jsonResponse($dataResponse);
+*/
 
-// 3. Configuração codigo da resposta
-echo json_encode($dataResponse, JSON_UNESCAPED_UNICODE);
-
-exit();
 ?>

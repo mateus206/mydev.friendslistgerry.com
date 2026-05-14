@@ -176,4 +176,63 @@ class AuthController
 
     header("Location: /");
   }
+public function loginApi() {
+    try{
+ 
+      var_dump("loginApi");
+      var_dump($_POST);
+      $email = trim($_POST['email']) ?? '';
+ 
+      $password = trim($_POST['password']) ?? '';
+      // Se não houver email ou password, mostrar erro
+      // é preciso lançar exceção para o index.php apanhar e mostrar o erro via flash message
+      if (empty($email) || empty($password)) {
+        throw new Exception("Email e password são obrigatórios");
+      }
+ 
+      $user = (new UserDAO())->findByEmail($email);
+ 
+      if (! $user || ! password_verify($password, $user->getPassword())) {
+        throw new Exception("Email ou password errados");
+      }
+ 
+      $payload = [
+        'iat' => time(),
+        'exp' => time() + 3600,
+        "data" => [
+          'id' => $user->getId(),
+          'role' => $user->isAdmin()
+        ]
+      ];
+ 
+      $jwt = JWT::encode($payload, "FCP", "HS256");
+ 
+      $dataResponse = [
+        'success' => true,
+        'message' => "Login efetuado com sucesso",
+        'data'    => [],
+        'jwt' => $jwt
+        'user' => [
+          'id' => $user->getId(),
+          'username' => $user->getUsername(),
+          'email' => $user->getEmail(),
+          'is_admin' => $user->isAdmin()
+        ]
+      ];
+ 
+      Utils::jsonResponse($dataResponse, 200);
+ 
+ 
+ 
+ 
+    } catch(Exception $e) {
+      $dataResponse = [
+        'success' => false,
+        'message' => $e->getMessage(),
+        'data'    => []
+      ];
+ 
+      Utils::jsonResponse($dataResponse, 401);
+    }
+  }
 }
